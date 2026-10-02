@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: ae-consulting-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SITE_ORIGIN
+        value: https://enesdoudouzi-sys.github.io
+      - key: DATABASE_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: CONTACT_TO_EMAIL
+        sync: false
