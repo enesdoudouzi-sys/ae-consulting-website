@@ -55,6 +55,15 @@
     .founder-card li{position:relative;padding-left:18px;color:var(--muted);font-size:.86rem;line-height:1.65}
     .founder-card li:before{content:"";position:absolute;left:0;top:.65em;width:6px;height:6px;border-radius:50%;background:#7f965f}
     @media(max-width:800px){.founder-grid{grid-template-columns:1fr;margin-top:30px}.founder-card{padding:22px}}
+    .hero-photo-wrap{position:absolute;inset:8px 0 8px 16px;overflow:hidden;border-radius:6px;box-shadow:0 28px 60px #23453a30}
+    .hero-photo{width:100%;height:100%;object-fit:cover;object-position:center 46%;filter:saturate(.78)}
+    .hero-photo-wrap:after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,#112e2820,transparent 60%,#112e2840)}
+    .photo-note{position:absolute;z-index:2;right:-4px;bottom:42px;padding:15px 19px;background:var(--white);box-shadow:0 15px 36px #20392c1c;transform:rotate(2deg)}
+    .photo-note span{display:block;color:#69805f;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+    .photo-note strong{display:block;margin-top:4px;font:italic 1rem var(--serif)}
+    .about-visual img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 76%;filter:saturate(.78)}
+    .about-visual:after{z-index:1;pointer-events:none}
+    .about-caption{z-index:2;padding:9px 12px;background:var(--white);color:#53675e}
   </style>
 </head>
 <body>
@@ -78,9 +87,9 @@
           <p class="hero-copy">Wir helfen mittelständischen Unternehmen, Abläufe zu verbessern, Zusammenarbeit zu stärken und KI-Automatisierung sowie individuelle Software dort einzusetzen, wo sie den Arbeitsalltag wirklich erleichtern.</p>
           <div class="hero-actions"><a class="button" href="#kontakt">Erstgespräch anfragen <span aria-hidden="true">↗</span></a><a class="text-link" href="#leistungen">So unterstützen wir Sie <span aria-hidden="true">→</span></a></div>
         </div>
-        <div class="hero-art reveal" aria-label="Illustration eines strukturierten Verbesserungsprozesses">
-          <div class="art-card"><div class="art-top"><span>Gemeinsam wirksam</span><b>AE.</b></div><div class="art-title">Aus Komplexität<br>wird <em>Klarheit.</em></div><div class="art-flow" aria-hidden="true"><i>01</i><span></span><i>02</i><span></span><i>03</i></div></div>
-          <div class="art-note">„Was braucht Ihr Team,<br>um gut arbeiten zu können?“<strong>Der Anfang jeder Veränderung</strong></div>
+        <div class="hero-art reveal">
+          <div class="hero-photo-wrap"><img class="hero-photo" src="assets/beratungsteam.jpg" alt="Ein Beratungsteam bespricht gemeinsam Zahlen und Abläufe am Laptop." fetchpriority="high"></div>
+          <div class="photo-note"><span>Prozesse verstehen</span><strong>Gemeinsam wirksam.</strong></div>
         </div>
       </div>
     </section>
@@ -119,7 +128,7 @@
     </section>
     <section class="section" id="ueber-uns">
       <div class="about-grid wrap">
-        <div class="about-visual reveal" aria-hidden="true"><div class="about-monogram">AE</div><span class="about-caption">Klar denken. Gemeinsam umsetzen.</span></div>
+        <div class="about-visual reveal"><img src="assets/logistikteam.jpg" alt="Mitarbeitende stimmen sich in einem Lager zu Arbeitsabläufen ab." loading="lazy"><span class="about-caption">Klar denken. Gemeinsam umsetzen.</span></div>
         <div class="about-copy reveal"><div class="eyebrow">Über AE Consulting</div><h2>Die Köpfe hinter AE Consulting.</h2><p>Zwei sich ergänzende Perspektiven: Prozess und Qualität auf der einen, Digitalisierung und Automatisierung auf der anderen Seite.</p><p>Gemeinsam verbinden wir praktische Erfahrung aus dem Logistikumfeld mit fundiertem Prozesswissen und technischem Know-how. So entstehen Lösungen, die im Betrieb funktionieren und sich sinnvoll weiterentwickeln lassen.</p></div>
       </div>
       <div class="founder-grid wrap">
