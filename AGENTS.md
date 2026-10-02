@@ -2,7 +2,7 @@
 Prozessberatung für den Mittelstand (Gründer: Ahmet Ergün, Enes Doudouzi).
 
 ## Struktur
-- website/  statische Seite (index.html, kein Build-Schritt), Deployment: Render Static Site
+- docs/     statische Seite (index.html, kein Build-Schritt), Deployment: GitHub Pages
 - api/      Express-Backend (Kontaktformular, Neon-Postgres, Resend), Deployment: Render Web Service
 
 ## Regeln
