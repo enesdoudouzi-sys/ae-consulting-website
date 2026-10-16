@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/site.css">
+  <title>Verwaltung – AE Consulting</title>
+  <style>
+    .admin{padding:40px 0 80px}.admin .wrap{max-width:1100px}
+    .admin h1{font:500 2.4rem var(--display);letter-spacing:-.05em;margin:10px 0 24px}
+    .admin-login{display:flex;gap:10px;flex-wrap:wrap;max-width:560px}
+    .admin-login input{flex:1;min-width:240px;min-height:46px;padding:10px 12px;border:1px solid #cbd5cc;background:#fffefa;font:inherit}
+    .admin-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+    .admin-filter{display:flex;gap:6px}.admin-filter button{padding:7px 12px;border:1px solid #cbd5cc;background:#fffefa;border-radius:999px;font:600 .8rem var(--sans);cursor:pointer}
+    .admin-filter button[aria-pressed="true"]{background:var(--green);color:#fff;border-color:var(--green)}
+    .req{display:grid;grid-template-columns:150px 1fr auto;gap:18px;padding:18px;background:var(--white);border:1px solid #e4e7df;margin-bottom:10px}
+    .req-when b{display:block;font:600 1.05rem var(--display)}.req-when span{font-size:.8rem;color:var(--muted)}
+    .req-who b{display:block}.req-who a{color:var(--green);font-size:.88rem}.req-who p{margin:8px 0 0;color:var(--muted);font-size:.86rem;white-space:pre-wrap}
+    .req-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+    .badge{padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+    .badge.pending{background:#fff1c7;color:#7a5a00}.badge.confirmed{background:#dcebd2;color:#1f5b2d}.badge.declined{background:#f3dcd5;color:#86321b}
+    .req-actions button{padding:7px 12px;border:1px solid var(--green);background:#fffefa;color:var(--green);font:600 .8rem var(--sans);cursor:pointer;border-radius:3px}
+    .req-actions button.ok{background:var(--green);color:#fff}
+    .stats{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin:30px 0}
+    .stats > div{background:var(--white);border:1px solid #e4e7df;padding:20px}
+    .bars{display:flex;align-items:flex-end;gap:3px;height:130px;margin-top:12px}
+    .bars i{flex:1;background:#9db88a;min-height:2px;border-radius:2px 2px 0 0}
+    .stats table{width:100%;font-size:.86rem;border-collapse:collapse}.stats td{padding:5px 0;border-bottom:1px solid var(--line)}.stats td:last-child{text-align:right;font-weight:700}
+    .admin-msg{color:var(--muted)}
+    @media(max-width:800px){.req{grid-template-columns:1fr}.req-actions{flex-direction:row;align-items:center;flex-wrap:wrap}.stats{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="admin" id="inhalt">
+    <div class="wrap">
+      <a class="back-home" href="./">← Zur Website</a>
+      <h1>Verwaltung</h1>
+      <form class="admin-login" id="login">
+        <input type="password" id="token" placeholder="Admin-Schlüssel (ADMIN_TOKEN aus Render)" autocomplete="current-password" required>
+        <button class="button" type="submit">Anmelden</button>
+      </form>
+      <p class="admin-msg" id="msg"></p>
+      <section id="area" hidden>
+        <div class="stats"><div><b>Seitenaufrufe (30 Tage)</b> <span id="total" class="admin-msg"></span><div class="bars" id="bars"></div></div><div><b>Beliebteste Seiten</b><table id="pages"></table></div></div>
+        <div class="admin-bar"><b>Terminanfragen</b><div class="admin-filter" id="filter"><button type="button" data-f="pending" aria-pressed="true">Offen</button><button type="button" data-f="all" aria-pressed="false">Alle</button></div><button class="voice-btn" type="button" id="logout" style="margin-left:auto;padding:7px 12px;border:1px solid #cbd5cc;background:none;cursor:pointer">Abmelden</button></div>
+        <div id="list"></div>
+      </section>
+    </div>
+  </main>
+  <script src="assets/config.js"></script>
+  <script>
+    (() => {
+      const API = (window.AE_CONFIG || {}).api;
+      const $ = (id) => document.getElementById(id);
+      const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+      let token = sessionStorage.getItem('ae-admin') || '';
+      let filter = 'pending';
+      let requests = [];
+      const call = async (path, options = {}) => {
+        const response = await fetch(`${API}${path}`, { ...options, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...(options.headers || {}) } });
+        const data = await response.json().catch(() => ({}));
+        if (response.status === 401) { logout('Der Schlüssel ist ungültig.'); throw new Error('401'); }
+        if (!response.ok) throw new Error(data.error || 'Fehler');
+        return data;
+      };
+      const fmt = (iso) => new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${iso}T12:00:00`));
+      const LABEL = { pending: 'Offen', confirmed: 'Bestätigt', declined: 'Abgesagt' };
+      function render() {
+        const list = requests.filter((r) => filter === 'all' || r.status === filter);
+        $('list').innerHTML = list.length ? list.map((r) => `<article class="req">
+            <div class="req-when"><b>${fmt(r.date)}</b><span>${esc(r.time)} Uhr · #${r.id}</span></div>
+            <div class="req-who"><b>${esc(r.name)}</b><a href="mailto:${esc(r.email)}">${esc(r.email)}</a>${r.topic ? `<p>${esc(r.topic)}</p>` : ''}<span class="admin-msg" style="font-size:.75rem">Eingang: ${new Date(r.created_at).toLocaleString('de-DE')}</span></div>
+            <div class="req-actions"><span class="badge ${esc(r.status)}">${LABEL[r.status] || esc(r.status)}</span>
+              ${r.status !== 'confirmed' ? `<button class="ok" type="button" data-id="${r.id}" data-s="confirmed">Bestätigen</button>` : ''}
+              ${r.status !== 'declined' ? `<button type="button" data-id="${r.id}" data-s="declined">Absagen</button>` : ''}</div></article>`).join('')
+          : '<p class="admin-msg">Keine Anfragen in dieser Ansicht.</p>';
+        $('list').querySelectorAll('button[data-id]').forEach((b) => b.addEventListener('click', () => decide(b.dataset.id, b.dataset.s)));
+      }
+      async function decide(id, status) {
+        const note = status === 'declined' ? (prompt('Optional: kurze Nachricht an den Kunden (z. B. Alternativvorschlag)') ?? null) : '';
+        if (note === null) return;
+        try {
+          const result = await call(`/api/admin/requests/${id}/status`, { method: 'POST', body: JSON.stringify({ status, note }) });
+          await load();
+          $('msg').textContent = result.mailed ? 'Gespeichert. Der Kunde wurde per E-Mail informiert.' : 'Gespeichert. Hinweis: Es wurde keine E-Mail gesendet (SEND_CONFIRMATION ist aus) – bitte den Kunden selbst informieren.';
+        } catch (e) { if (e.message !== '401') $('msg').textContent = e.message; }
+      }
+      async function load() {
+        $('msg').textContent = 'Wird geladen … (beim ersten Aufruf kann der Server bis zu einer Minute brauchen)';
+        const [req, stats] = await Promise.all([call('/api/admin/requests'), call('/api/admin/stats')]);
+        requests = req.requests;
+        const max = Math.max(1, ...stats.daily.map((d) => d.views));
+        $('bars').innerHTML = stats.daily.map((d) => `<i style="height:${Math.round(d.views / max * 100)}%" title="${fmt(d.day)}: ${d.views}"></i>`).join('') || '<span class="admin-msg">Noch keine Daten.</span>';
+        $('total').textContent = `· ${stats.daily.reduce((a, d) => a + d.views, 0)} insgesamt`;
+        $('pages').innerHTML = stats.pages.map((p) => `<tr><td>${esc(p.path)}</td><td>${p.views}</td></tr>`).join('');
+        $('login').hidden = true; $('area').hidden = false; $('msg').textContent = '';
+        render();
+      }
+      function logout(message = '') {
+        token = ''; sessionStorage.removeItem('ae-admin');
+        $('area').hidden = true; $('login').hidden = false; $('msg').textContent = message;
+      }
+      $('login').addEventListener('submit', (e) => {
+        e.preventDefault(); token = $('token').value.trim(); sessionStorage.setItem('ae-admin', token);
+        load().catch((err) => { if (err.message !== '401') $('msg').textContent = 'Server nicht erreichbar: ' + err.message; });
+      });
+      $('logout').addEventListener('click', () => logout());
+      $('filter').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+        filter = b.dataset.f; $('filter').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); render();
+      }));
+      if (token) load().catch(() => {});
+    })();
+  </script>
+</body>
+</html>
