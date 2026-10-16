@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
-import { app, buildMails, contactSchema } from './server.js';
+import { app, buildDecisionMail, buildMails, contactSchema } from './server.js';
 
 let server;
 let baseUrl;
@@ -130,4 +130,43 @@ test('builds plain-text mails without user input in subjects or the customer con
     assert.equal(text.includes('Spam'), false);
     assert.equal(text.includes('spam.example'), false);
   }
+});
+
+test('protects the admin area', async () => {
+  for (const [method, path] of [['GET', '/api/admin/requests'], ['GET', '/api/admin/stats'], ['POST', '/api/admin/requests/1/status']]) {
+    const response = await fetch(`${baseUrl}${path}`, {
+      method,
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer wrong-token-wrong-token-wrong' },
+      body: method === 'POST' ? JSON.stringify({ status: 'confirmed' }) : undefined,
+    });
+    assert.equal(response.status, 401, path);
+    assert.deepEqual(await response.json(), { error: 'Nicht berechtigt.' });
+  }
+});
+
+test('page views accept only plain paths and store nothing personal', async () => {
+  const bad = await fetch(`${baseUrl}/api/pv`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: '/?email=max@example.com' }),
+  });
+  assert.equal(bad.status, 400);
+  const extra = await fetch(`${baseUrl}/api/pv`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: '/wissen/', ip: '1.2.3.4' }),
+  });
+  assert.equal(extra.status, 400);
+  const ok = await fetch(`${baseUrl}/api/pv`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: '/wissen/' }),
+  });
+  assert.equal(ok.status, 204);
+});
+
+test('decision mails attach a calendar entry only for confirmed appointments', () => {
+  const confirmed = buildDecisionMail({ id: 3, email: 'kunde@example.com', date: '2027-01-04', time: '10:00', status: 'confirmed', note: '' });
+  assert.deepEqual(confirmed.to, ['kunde@example.com']);
+  assert.equal(confirmed.attachments[0].filename, 'erstgespraech.ics');
+  assert.ok(Buffer.from(confirmed.attachments[0].content, 'base64').toString().includes('20270104T100000'));
+  const declined = buildDecisionMail({ id: 3, email: 'kunde@example.com', date: '2027-01-04', time: '10:00', status: 'declined', note: 'Gerne am Dienstag.' });
+  assert.equal(declined.attachments, undefined);
+  assert.ok(declined.text.includes('Gerne am Dienstag.'));
 });
