@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /ae-consulting-website/admin.html
+
+Sitemap: https://enesdoudouzi-sys.github.io/ae-consulting-website/sitemap.xml

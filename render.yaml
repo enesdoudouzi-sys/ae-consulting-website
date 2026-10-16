@@ -20,3 +20,9 @@ services:
         sync: false
       - key: CONTACT_TO_EMAIL
         sync: false
+      - key: SEND_CONFIRMATION
+        value: "false"
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: RETENTION_DAYS
+        value: "180"
