@@ -10,6 +10,9 @@ const { Pool } = pg;
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const isProduction = process.env.NODE_ENV === 'production';
+// Formularanfragen werden nach dieser Frist automatisch gelöscht (Datenschutz: Speicherbegrenzung).
+const retentionDays = Math.min(Math.max(Number(process.env.RETENTION_DAYS) || 180, 7), 730);
+const sendConfirmation = process.env.SEND_CONFIRMATION === 'true';
 const allowedOrigins = new Set(
   (process.env.SITE_ORIGIN || 'http://localhost:8000')
     .split(',').map((origin) => origin.trim()).filter(Boolean),
@@ -60,6 +63,7 @@ const contactSchema = z.object({
   time: z.string().regex(/^(09|10|11|13|14|15|16):00$/),
   topic: z.string().trim().max(2000).optional().default(''),
   website: z.string().max(100).optional().default(''),
+  consent: z.union([z.literal(true), z.literal('on'), z.literal('true')]).optional(),
 }).strict().superRefine(({ date }, context) => {
   const requestedDate = new Date(`${date}T12:00:00Z`);
   const today = new Date();
@@ -68,6 +72,68 @@ const contactSchema = z.object({
     context.addIssue({ code: 'custom', message: 'Choose a future weekday.', path: ['date'] });
   }
 });
+
+const formatDate = (isoDate) => isoDate.split('-').reverse().join('.');
+
+// Baut die E-Mails als reinen Text. Nutzereingaben landen nie im Betreff,
+// und die Bestätigung an den Kunden enthält keinen frei eingegebenen Text.
+function buildMails({ id, name, email, date, time, topic }) {
+  const from = process.env.RESEND_FROM_EMAIL || 'AE Consulting <onboarding@resend.dev>';
+  const notify = {
+    from,
+    to: [process.env.CONTACT_TO_EMAIL],
+    reply_to: email,
+    subject: `Neue Anfrage für ein Erstgespräch (#${id})`,
+    text: [
+      `Name: ${name}`, `E-Mail: ${email}`,
+      `Wunschtermin: ${formatDate(date)} um ${time} Uhr`,
+      `Anliegen: ${topic || 'Noch offen'}`, `Anfrage-ID: ${id}`,
+      '', 'Bitte bestätigen Sie den Termin oder schlagen Sie eine Alternative vor (Antworten geht direkt an die anfragende Person).',
+    ].join('\n'),
+  };
+  const confirmation = {
+    from,
+    to: [email],
+    reply_to: process.env.CONTACT_TO_EMAIL,
+    subject: 'Ihre Anfrage bei AE Consulting ist eingegangen',
+    text: [
+      'Guten Tag,', '',
+      `vielen Dank für Ihre Anfrage für ein Erstgespräch am ${formatDate(date)} um ${time} Uhr.`,
+      'Wir prüfen den Termin und melden uns in Kürze per E-Mail mit einer Bestätigung oder einem Alternativvorschlag.',
+      'Der Termin ist erst nach unserer Bestätigung vereinbart.', '',
+      'Freundliche Grüße', 'Ahmet Ergün & Enes Doudouzi', 'AE Consulting', '',
+      `Ihre Anfrage-Nummer: ${id}`,
+      `Ihre Angaben werden nach spätestens ${retentionDays} Tagen gelöscht. Haben Sie diese Anfrage nicht gestellt, können Sie diese E-Mail ignorieren.`,
+    ].join('\n'),
+  };
+  return { notify, confirmation };
+}
+
+async function sendMail(message) {
+  const mailResponse = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(message),
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!mailResponse.ok) throw new Error('Email provider rejected the request');
+}
+
+async function purgeExpiredRequests() {
+  if (!pool) return;
+  try {
+    const result = await pool.query(
+      'DELETE FROM contact_requests WHERE created_at < NOW() - make_interval(days => $1)',
+      [retentionDays],
+    );
+    if (result.rowCount) console.log(`Retention: ${result.rowCount} expired request(s) deleted`);
+  } catch {
+    console.error('Retention cleanup failed');
+  }
+}
 
 app.get('/healthz', async (_request, response) => {
   if (!pool) return response.status(503).json({ status: 'unavailable' });
@@ -83,6 +149,7 @@ app.post('/api/contact', contactLimiter, async (request, response, next) => {
   const parsed = contactSchema.safeParse(request.body);
   if (!parsed.success) return response.status(400).json({ error: 'Bitte prüfen Sie Ihre Angaben.' });
   if (parsed.data.website) return response.status(202).json({ status: 'received' });
+  if (!parsed.data.consent) return response.status(400).json({ error: 'Bitte bestätigen Sie die Datenschutzhinweise.' });
   if (!pool || !process.env.RESEND_API_KEY || !process.env.CONTACT_TO_EMAIL) {
     return response.status(503).json({ error: 'Der Versand ist derzeit nicht verfügbar.' });
   }
@@ -90,30 +157,16 @@ app.post('/api/contact', contactLimiter, async (request, response, next) => {
   const { name, email, date, time, topic } = parsed.data;
   try {
     const result = await pool.query(
-      `INSERT INTO contact_requests (name, email, requested_date, requested_time, topic)
-       VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+      `INSERT INTO contact_requests (name, email, requested_date, requested_time, topic, consent_at)
+       VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id`,
       [name, email, date, time, topic],
     );
-    const mailResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || 'AE Consulting <onboarding@resend.dev>',
-        to: [process.env.CONTACT_TO_EMAIL],
-        reply_to: email,
-        subject: 'Anfrage für ein Erstgespräch',
-        text: [
-          `Name: ${name}`, `E-Mail: ${email}`,
-          `Wunschtermin: ${date} um ${time} Uhr`,
-          `Anliegen: ${topic || 'Noch offen'}`, `Anfrage-ID: ${result.rows[0].id}`,
-        ].join('\n'),
-      }),
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!mailResponse.ok) throw new Error('Email provider rejected the request');
+    const { notify, confirmation } = buildMails({ id: result.rows[0].id, name, email, date, time, topic });
+    await sendMail(notify);
+    if (sendConfirmation) {
+      // Die Anfrage ist gespeichert und gemeldet; eine fehlgeschlagene Bestätigung soll sie nicht scheitern lassen.
+      await sendMail(confirmation).catch(() => console.error('Confirmation email failed'));
+    }
     return response.status(201).json({ status: 'received' });
   } catch (error) {
     return next(error);
@@ -142,6 +195,9 @@ async function start() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `);
+    await pool.query('ALTER TABLE contact_requests ADD COLUMN IF NOT EXISTS consent_at TIMESTAMPTZ');
+    await purgeExpiredRequests();
+    setInterval(purgeExpiredRequests, 24 * 60 * 60 * 1000).unref();
   }
   const server = app.listen(port, '0.0.0.0', () => console.log(`AE Consulting API listening on port ${port}`));
   const shutdown = () => server.close(async () => {
@@ -159,4 +215,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
 }
 
-export { app };
+export { app, buildMails, contactSchema };
