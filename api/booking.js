@@ -54,13 +54,13 @@ const icsDate = (date, time, offsetMinutes = 0) => {
 export function buildIcs({ id, date, time }) {
   const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
   return [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//AE Consulting//Erstgespraech//DE', 'METHOD:PUBLISH',
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Doudouzi Erguen//Erstgespraech//DE', 'METHOD:PUBLISH',
     'BEGIN:VEVENT',
     `UID:ae-consulting-${id}@enesdoudouzi-sys.github.io`,
     `DTSTAMP:${stamp}`,
     `DTSTART;TZID=Europe/Berlin:${icsDate(date, time)}`,
     `DTEND;TZID=Europe/Berlin:${icsDate(date, time, 30)}`,
-    'SUMMARY:Erstgespräch mit AE Consulting',
+    'SUMMARY:Erstgespräch mit Enes Doudouzi & Ahmet Ergün',
     'DESCRIPTION:Unverbindliches Erstgespräch (ca. 30 Minuten). Die Einwahldaten erhalten Sie per E-Mail.',
     'END:VEVENT', 'END:VCALENDAR', '',
   ].join('\r\n');

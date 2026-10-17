@@ -1,13 +1,13 @@
-# AE Consulting – Website und Kontakt-API
+# Portfolio Enes Doudouzi & Ahmet Ergün – Website und Kontakt-API
 
-Prozess- und KI-Beratung für den Mittelstand · Ahmet Ergün & Enes Doudouzi
+Prozesse, Logistik und KI für kleine und mittlere Unternehmen
 
 | Teil | Ort | Läuft auf |
 |---|---|---|
 | Website (statisch, ohne Build) | `docs/` | GitHub Pages |
 | API (Termine, Anfragen, Statistik) | `api/` | Render Web Service + Neon Postgres + Resend |
 
-Live: https://enesdoudouzi-sys.github.io/ae-consulting-website/
+Live: https://enesdoudouzi-sys.github.io/ae-consulting-website/ (Portfolio; künftig unter https://enesdoudouzi-sys.github.io/)
 
 ## Lokal entwickeln
 
@@ -28,7 +28,7 @@ Für lokale Tests in `docs/assets/config.js` vorübergehend `api: 'http://localh
 |---|---|
 | `DATABASE_URL` | Neon-Verbindungs-URL |
 | `RESEND_API_KEY` | API-Schlüssel von Resend |
-| `RESEND_FROM_EMAIL` | Absender, z. B. `AE Consulting <kontakt@ae-consulting.de>` |
+| `RESEND_FROM_EMAIL` | Absender, z. B. `Enes Doudouzi <kontakt@ihre-domain.de>` |
 | `CONTACT_TO_EMAIL` | Wer neue Anfragen bekommt |
 | `SEND_CONFIRMATION` | `true` = Kunden bekommen Eingangs- und Terminbestätigung (nur mit verifizierter Domain bei Resend) |
 | `ADMIN_TOKEN` | Schlüssel für `admin.html` (mind. 24 Zeichen, `openssl rand -hex 24`) |
@@ -44,12 +44,12 @@ Für lokale Tests in `docs/assets/config.js` vorübergehend `api: 'http://localh
 - **Termine verwalten:** `…/admin.html` öffnen, mit `ADMIN_TOKEN` anmelden, Anfragen bestätigen oder absagen. Dort seht ihr auch die anonymen Seitenaufrufe.
 - **Uhrzeiten für Termine:** in `api/booking.js` (`TIMES`) und im Fallback-Auswahlfeld in `docs/index.html`.
 
-## Eigene Domain (z. B. ae-consulting.de)
+## Eigene Domain
 
 1. Domain bei einem Anbieter kaufen (z. B. INWX, Strato, IONOS).
 2. GitHub → Repository → Settings → Pages → **Custom domain** eintragen; beim Domain-Anbieter die angezeigten DNS-Einträge setzen. „Enforce HTTPS“ aktivieren.
-3. In Render `SITE_ORIGIN` um `https://ae-consulting.de` ergänzen.
-4. In `docs/index.html`, `docs/wissen/*.html`, `docs/sitemap.xml`, `docs/robots.txt` die Adresse `enesdoudouzi-sys.github.io/ae-consulting-website` ersetzen; in `docs/404.html` `<base href="/">` setzen und in `docs/assets/site.js` das Entfernen des Präfixes prüfen.
+3. In Render `SITE_ORIGIN` um die neue Adresse ergänzen.
+4. In `docs/index.html`, `docs/wissen/*.html`, `docs/sitemap.xml` und `docs/robots.txt` die Adresse `enesdoudouzi-sys.github.io` ersetzen.
 5. Bei Resend die Domain verifizieren, `RESEND_FROM_EMAIL` auf die neue Adresse setzen und `SEND_CONFIRMATION=true`.
 
 Siehe auch `GESCHAEFT-CHECKLISTE.md` für alles außerhalb des Codes.

@@ -82,7 +82,7 @@ const adminToken = process.env.ADMIN_TOKEN || '';
 // Baut die E-Mails als reinen Text. Nutzereingaben landen nie im Betreff,
 // und die Bestätigung an den Kunden enthält keinen frei eingegebenen Text.
 function buildMails({ id, name, email, date, time, topic }) {
-  const from = process.env.RESEND_FROM_EMAIL || 'AE Consulting <onboarding@resend.dev>';
+  const from = process.env.RESEND_FROM_EMAIL || 'Doudouzi & Ergün <onboarding@resend.dev>';
   const notify = {
     from,
     to: [process.env.CONTACT_TO_EMAIL],
@@ -99,13 +99,13 @@ function buildMails({ id, name, email, date, time, topic }) {
     from,
     to: [email],
     reply_to: process.env.CONTACT_TO_EMAIL,
-    subject: 'Ihre Anfrage bei AE Consulting ist eingegangen',
+    subject: 'Ihre Terminanfrage ist eingegangen',
     text: [
       'Guten Tag,', '',
       `vielen Dank für Ihre Anfrage für ein Erstgespräch am ${formatDate(date)} um ${time} Uhr.`,
       'Wir prüfen den Termin und melden uns in Kürze per E-Mail mit einer Bestätigung oder einem Alternativvorschlag.',
       'Der Termin ist erst nach unserer Bestätigung vereinbart.', '',
-      'Freundliche Grüße', 'Ahmet Ergün & Enes Doudouzi', 'AE Consulting', '',
+      'Freundliche Grüße', 'Enes Doudouzi & Ahmet Ergün', '',
       `Ihre Anfrage-Nummer: ${id}`,
       `Ihre Angaben werden nach spätestens ${retentionDays} Tagen gelöscht. Haben Sie diese Anfrage nicht gestellt, können Sie diese E-Mail ignorieren.`,
     ].join('\n'),
@@ -115,20 +115,20 @@ function buildMails({ id, name, email, date, time, topic }) {
 
 // Antwort an den Kunden nach Bestätigung oder Absage im Admin-Bereich.
 function buildDecisionMail({ id, email, date, time, status, note }) {
-  const from = process.env.RESEND_FROM_EMAIL || 'AE Consulting <onboarding@resend.dev>';
+  const from = process.env.RESEND_FROM_EMAIL || 'Doudouzi & Ergün <onboarding@resend.dev>';
   const confirmed = status === 'confirmed';
   const message = {
     from,
     to: [email],
     reply_to: process.env.CONTACT_TO_EMAIL,
-    subject: confirmed ? 'Ihr Termin mit AE Consulting ist bestätigt' : 'Ihre Terminanfrage bei AE Consulting',
+    subject: confirmed ? 'Ihr Erstgespräch ist bestätigt' : 'Ihre Terminanfrage',
     text: [
       'Guten Tag,', '',
       confirmed
         ? `wir freuen uns auf das Erstgespräch am ${formatDate(date)} um ${time} Uhr. Den Termin finden Sie im Anhang für Ihren Kalender.`
         : `leider können wir den Termin am ${formatDate(date)} um ${time} Uhr nicht wahrnehmen. Bitte wählen Sie auf unserer Website einen anderen Termin oder antworten Sie auf diese E-Mail.`,
       ...(note ? ['', note] : []),
-      '', 'Freundliche Grüße', 'Ahmet Ergün & Enes Doudouzi', 'AE Consulting', '', `Anfrage-Nummer: ${id}`,
+      '', 'Freundliche Grüße', 'Enes Doudouzi & Ahmet Ergün', '', `Anfrage-Nummer: ${id}`,
     ].join('\n'),
   };
   if (confirmed) {
@@ -343,7 +343,7 @@ async function start() {
     await purgeExpiredRequests();
     setInterval(purgeExpiredRequests, 24 * 60 * 60 * 1000).unref();
   }
-  const server = app.listen(port, '0.0.0.0', () => console.log(`AE Consulting API listening on port ${port}`));
+  const server = app.listen(port, '0.0.0.0', () => console.log(`Contact API listening on port ${port}`));
   const shutdown = () => server.close(async () => {
     await pool?.end();
     process.exit(0);
