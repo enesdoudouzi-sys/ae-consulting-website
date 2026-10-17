@@ -1,5 +1,5 @@
-# AE Consulting
-Prozessberatung für den Mittelstand (Gründer: Ahmet Ergün, Enes Doudouzi).
+# Portfolio Enes Doudouzi & Ahmet Ergün
+Gemeinsames Portfolio: Prozesse, Logistik und KI für kleine und mittlere Unternehmen. Es gibt keine Firma – keine Firmennamen auf der Website verwenden.
 
 ## Struktur
 - docs/     statische Seite (index.html, kein Build-Schritt), Deployment: GitHub Pages

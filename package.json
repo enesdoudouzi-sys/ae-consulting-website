@@ -1,9 +1,9 @@
 {
-  "name": "ae-consulting",
+  "name": "doudouzi-erguen-portfolio",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "AE Consulting website and contact API",
+  "description": "Portfolio website and contact API of Enes Doudouzi & Ahmet Ergün",
   "engines": { "node": ">=20" },
   "scripts": {
     "start": "node api/server.js",
