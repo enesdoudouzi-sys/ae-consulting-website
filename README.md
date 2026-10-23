@@ -1,55 +1,63 @@
-# Portfolio Enes Doudouzi & Ahmet Ergün – Website und Kontakt-API
+<div align="center">
 
-Prozesse, Logistik und KI für kleine und mittlere Unternehmen
+# 🧩 AE Consulting — Website & Kontakt-API
 
-| Teil | Ort | Läuft auf |
+**Firmen-Website mit eigener Buchungs- & Kontakt-API — Prozesse, Logistik und KI für kleine und mittlere Unternehmen.**
+
+[![Live](https://img.shields.io/badge/Live-Website-2563eb?style=for-the-badge&logo=github)](https://enesdoudouzi-sys.github.io/ae-consulting-website/)
+&nbsp;
+![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-5-000000?style=for-the-badge&logo=express&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+
+### 👉 [**Live ansehen**](https://enesdoudouzi-sys.github.io/ae-consulting-website/)
+
+</div>
+
+---
+
+## 📖 Über das Projekt
+
+Eine komplette **Business-Website mit eigenem Backend** für die Unternehmensberatung *AE Consulting* (Enes Doudouzi & Ahmet Ergün). Kunden können Anfragen stellen und **Termine buchen** — verarbeitet von einer selbst gebauten REST-API mit Datenbank, E-Mail-Versand und einem geschützten Admin-Bereich.
+
+Das Projekt zeigt **Full-Stack-Entwicklung von A bis Z**: statisches Frontend, sichere API, Datenbank, E-Mail-Automatisierung, Datenschutz und Deployment.
+
+## ✨ Features
+
+- 📅 **Termin-Buchung & Kontaktformular** mit Server-Validierung (Zod)
+- 📧 **Automatische E-Mails** (Eingangs- & Terminbestätigung) via Resend
+- 🔐 **Geschützter Admin-Bereich** (Token-Auth) zum Verwalten von Anfragen
+- 🛡 **Security-Hardening:** Helmet (HTTP-Header), Rate-Limiting, CORS-Allowlist
+- 🗑 **DSGVO-konform:** automatische Löschung alter Anfragen nach X Tagen
+- 📈 **Anonyme Seitenaufruf-Statistik** (ohne Cookies/Tracking)
+- 🔎 **SEO-optimiert:** Sitemap, robots.txt, Fachartikel-Bereich
+
+## 🧰 Tech-Stack
+
+| Teil | Technik | Hosting |
 |---|---|---|
-| Website (statisch, ohne Build) | `docs/` | GitHub Pages |
-| API (Termine, Anfragen, Statistik) | `api/` | Render Web Service + Neon Postgres + Resend |
+| **Frontend** | HTML · CSS · JavaScript (statisch, kein Build) | GitHub Pages |
+| **Backend/API** | Node.js · Express 5 · Zod · Helmet · Rate-Limit | Render |
+| **Datenbank** | PostgreSQL (Neon) | Neon |
+| **E-Mail** | Resend | — |
 
-Live: https://enesdoudouzi-sys.github.io/ae-consulting-website/ (Portfolio; künftig unter https://enesdoudouzi-sys.github.io/)
-
-## Lokal entwickeln
+## 🚀 Lokal starten
 
 ```bash
 npm ci
-npm test                 # alle Tests
-npm run check            # Syntaxprüfung der API
-cp .env.example .env     # Werte eintragen, dann:
-node --env-file=.env api/server.js
-python3 -m http.server 8000 -d docs   # Website unter http://localhost:8000
+npm test                              # Tests
+npm run check                         # API-Syntaxprüfung
+cp .env.example .env                  # Werte eintragen
+node --env-file=.env api/server.js    # API starten
+python3 -m http.server 8000 -d docs   # Website → http://localhost:8000
 ```
 
-Für lokale Tests in `docs/assets/config.js` vorübergehend `api: 'http://localhost:3000'` setzen.
+> Konfiguration & Betrieb (Umgebungsvariablen, Domain, Pflege der Inhalte, Admin-Bereich) sind in [`GESCHAEFT-CHECKLISTE.md`](GESCHAEFT-CHECKLISTE.md) dokumentiert.
 
-## Umgebungsvariablen (Render → Environment)
+---
 
-| Variable | Bedeutung |
-|---|---|
-| `DATABASE_URL` | Neon-Verbindungs-URL |
-| `RESEND_API_KEY` | API-Schlüssel von Resend |
-| `RESEND_FROM_EMAIL` | Absender, z. B. `Enes Doudouzi <kontakt@ihre-domain.de>` |
-| `CONTACT_TO_EMAIL` | Wer neue Anfragen bekommt |
-| `SEND_CONFIRMATION` | `true` = Kunden bekommen Eingangs- und Terminbestätigung (nur mit verifizierter Domain bei Resend) |
-| `ADMIN_TOKEN` | Schlüssel für `admin.html` (mind. 24 Zeichen, `openssl rand -hex 24`) |
-| `RETENTION_DAYS` | Anfragen werden nach so vielen Tagen gelöscht (Standard 180) |
-| `SITE_ORIGIN` | Erlaubte Website-Adressen, kommagetrennt |
+<div align="center">
 
-## So pflegt ihr die Website
+Entwickelt von **Enes Doudouzi** & **Ahmet Ergün**
 
-- **Fotos der Gründer:** Bild (quadratisch, ca. 400×400 px) nach `docs/assets/team/` legen und den Pfad in `docs/assets/config.js` unter `photos` eintragen.
-- **LinkedIn:** Profil-Adressen in `docs/assets/config.js` unter `linkedin` eintragen. Leere Felder werden nicht angezeigt.
-- **Kundenstimmen:** in `docs/assets/config.js` unter `testimonials` eintragen – nur mit Zustimmung der Kunden. Der Abschnitt erscheint automatisch.
-- **Neuer Fachartikel:** eine der Dateien in `docs/wissen/` kopieren, Titel, Beschreibung und Text anpassen, auf `docs/wissen/index.html` und auf der Startseite (Abschnitt `#wissen`) verlinken und in `docs/sitemap.xml` eintragen.
-- **Termine verwalten:** `…/admin.html` öffnen, mit `ADMIN_TOKEN` anmelden, Anfragen bestätigen oder absagen. Dort seht ihr auch die anonymen Seitenaufrufe.
-- **Uhrzeiten für Termine:** in `api/booking.js` (`TIMES`) und im Fallback-Auswahlfeld in `docs/index.html`.
-
-## Eigene Domain
-
-1. Domain bei einem Anbieter kaufen (z. B. INWX, Strato, IONOS).
-2. GitHub → Repository → Settings → Pages → **Custom domain** eintragen; beim Domain-Anbieter die angezeigten DNS-Einträge setzen. „Enforce HTTPS“ aktivieren.
-3. In Render `SITE_ORIGIN` um die neue Adresse ergänzen.
-4. In `docs/index.html`, `docs/wissen/*.html`, `docs/sitemap.xml` und `docs/robots.txt` die Adresse `enesdoudouzi-sys.github.io` ersetzen.
-5. Bei Resend die Domain verifizieren, `RESEND_FROM_EMAIL` auf die neue Adresse setzen und `SEND_CONFIRMATION=true`.
-
-Siehe auch `GESCHAEFT-CHECKLISTE.md` für alles außerhalb des Codes.
+</div>
