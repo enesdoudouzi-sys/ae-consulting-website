@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🧩 AE Consulting — Website & Kontakt-API
+# 🧩 Portfolio Doudouzi & Ergün — Website & Kontakt-API
 
-**Firmen-Website mit eigener Buchungs- & Kontakt-API — Prozesse, Logistik und KI für kleine und mittlere Unternehmen.**
+**Portfolio-Website mit eigener Buchungs- & Kontakt-API — Prozesse, Logistik und KI für kleine und mittlere Unternehmen.**
 
 [![Live](https://img.shields.io/badge/Live-Website-2563eb?style=for-the-badge&logo=github)](https://enesdoudouzi-sys.github.io/ae-consulting-website/)
 &nbsp;
@@ -14,11 +14,13 @@
 
 </div>
 
+![Website Vorschau](screenshots/home.png)
+
 ---
 
 ## 📖 Über das Projekt
 
-Eine komplette **Business-Website mit eigenem Backend** für die Unternehmensberatung *AE Consulting* (Enes Doudouzi & Ahmet Ergün). Kunden können Anfragen stellen und **Termine buchen** — verarbeitet von einer selbst gebauten REST-API mit Datenbank, E-Mail-Versand und einem geschützten Admin-Bereich.
+Eine komplette **Website mit eigenem Backend** — das gemeinsame Portfolio von **Enes Doudouzi & Ahmet Ergün** (Prozesse, Logistik & KI für KMU). Interessenten können Anfragen stellen und **Termine buchen** — verarbeitet von einer selbst gebauten REST-API mit Datenbank, E-Mail-Versand und einem geschützten Admin-Bereich.
 
 Das Projekt zeigt **Full-Stack-Entwicklung von A bis Z**: statisches Frontend, sichere API, Datenbank, E-Mail-Automatisierung, Datenschutz und Deployment.
 
