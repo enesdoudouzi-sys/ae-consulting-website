@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KI-Textanalyse · Doudouzi & Ergün</title>
+<meta name="description" content="Branchenübergreifende KI-Textanalyse: Kategorisierung, Stimmung und Entitäten – direkt im Browser, ohne Upload Ihrer Daten.">
+<style>
+  :root {
+    --green: #0e3d2e; --green-2: #16a34a; --green-soft: #e8f3ee;
+    --ink: #1f2a24; --muted: #6b7a72; --line: #dfe6e1; --bg: #f6f8f7; --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Inter", "Segoe UI", system-ui, Arial, sans-serif; color: var(--ink); background: var(--bg); line-height: 1.55; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 28px 16px 60px; }
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .logo { width: 38px; height: 38px; border-radius: 10px; background: var(--green); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 15px; }
+  h1 { font-size: 26px; margin: 10px 0 4px; color: var(--green); letter-spacing: -0.02em; }
+  .lead { color: var(--muted); margin: 0 0 6px; }
+  .badge { display: inline-block; background: var(--green-soft); color: var(--green); border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; margin: 2px 6px 2px 0; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin: 16px 0; box-shadow: 0 1px 2px rgba(16,61,46,.04); }
+  label { font-weight: 600; font-size: 14px; display: block; margin-bottom: 6px; }
+  textarea, input, select { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; font-size: 15px; font-family: inherit; color: var(--ink); background: #fff; outline: none; }
+  textarea:focus, input:focus, select:focus { border-color: var(--green-2); box-shadow: 0 0 0 3px rgba(22,163,74,.12); }
+  textarea { min-height: 150px; resize: vertical; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row > div { flex: 1 1 240px; }
+  .hint { font-size: 12.5px; color: var(--muted); margin-top: 5px; }
+  button.run { margin-top: 14px; background: var(--green); color: #fff; border: 0; border-radius: 10px; padding: 12px 20px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background .15s; }
+  button.run:hover { background: #0b2e22; }
+  button.run:disabled { opacity: .5; cursor: not-allowed; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .chip { background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; font-size: 13px; cursor: pointer; }
+  .chip:hover { border-color: var(--green-2); color: var(--green); }
+  .status { font-size: 13.5px; color: var(--muted); margin-top: 12px; display: none; }
+  .status.show { display: block; }
+  .bar { height: 6px; background: var(--green-soft); border-radius: 6px; overflow: hidden; margin-top: 6px; }
+  .bar > i { display: block; height: 100%; width: 0; background: var(--green-2); transition: width .2s; }
+  .results { display: none; }
+  .results.show { display: block; }
+  .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 680px) { .res-grid { grid-template-columns: 1fr; } }
+  .res h3 { font-size: 14px; margin: 0 0 10px; color: var(--green); text-transform: uppercase; letter-spacing: .04em; }
+  .classline { display: flex; align-items: center; gap: 10px; margin: 7px 0; }
+  .classline .name { width: 130px; font-size: 13.5px; flex-shrink: 0; }
+  .classline .track { flex: 1; height: 8px; background: #eef2ef; border-radius: 8px; overflow: hidden; }
+  .classline .track > i { display: block; height: 100%; background: var(--green-2); }
+  .classline .pct { width: 44px; text-align: right; font-size: 13px; font-weight: 700; color: var(--green); }
+  .sentiment { font-size: 30px; font-weight: 800; }
+  .ent { display: inline-block; border-radius: 6px; padding: 2px 8px; margin: 3px 4px 3px 0; font-size: 13px; }
+  .ent-PER { background: #e0ecff; color: #1e40af; }
+  .ent-ORG { background: #e8f3ee; color: #0e3d2e; }
+  .ent-LOC { background: #fef3c7; color: #92400e; }
+  .ent-MISC { background: #f1f5f9; color: #475569; }
+  .note { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); margin-top: 22px; padding-top: 14px; }
+  a { color: var(--green-2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">E&amp;A</div>
+    <div><strong>Doudouzi &amp; Ergün</strong> · Prozesse &amp; KI</div>
+  </header>
+
+  <h1>KI-Textanalyse</h1>
+  <p class="lead">Branchenübergreifende KI für Ihre Texte – <b>Kategorisierung</b>, <b>Stimmung</b> und <b>wichtige Begriffe</b> in Sekunden.</p>
+  <div>
+    <span class="badge">🔒 Läuft im Browser</span>
+    <span class="badge">Keine Daten-Uploads</span>
+    <span class="badge">Kostenlos · kein Konto</span>
+  </div>
+
+  <div class="card">
+    <label for="text">Text einfügen (E-Mail, Bewertung, Anfrage, Dokument …)</label>
+    <textarea id="text" placeholder="Beispiel: Sehr geehrte Damen und Herren, leider ist unsere Lieferung mit dem Fahrzeug 41 BFA 035 beschädigt angekommen. Wir bitten um schnelle Klärung. Mit freundlichen Grüßen, Firma Müller GmbH aus München."></textarea>
+
+    <div class="row" style="margin-top:14px">
+      <div>
+        <label for="preset">Branche (gibt Kategorien vor)</label>
+        <select id="preset">
+          <option value="logistik">🚚 Logistik &amp; Transport</option>
+          <option value="gastro">🍽 Gastronomie</option>
+          <option value="handel">🛒 Handel &amp; E-Commerce</option>
+          <option value="recht">⚖️ Recht &amp; Steuern</option>
+          <option value="dienstleistung">🧰 Dienstleistung / Handwerk</option>
+          <option value="gesundheit">🩺 Gesundheit</option>
+          <option value="custom">✏️ Eigene Kategorien</option>
+        </select>
+      </div>
+      <div>
+        <label for="cats">Kategorien (Komma-getrennt)</label>
+        <input id="cats" value="Reklamation, Anfrage, Bestellung, Angebot, Rechnung, Terminanfrage">
+        <div class="hint">Frei anpassbar – so funktioniert die KI für <b>jede</b> Branche.</div>
+      </div>
+    </div>
+
+    <button class="run" id="run">🔎 Analysieren</button>
+
+    <div class="status" id="status">
+      <span id="statusText">Lade KI-Modell … (einmaliger Download, danach schnell)</span>
+      <div class="bar"><i id="barFill"></i></div>
+    </div>
+  </div>
+
+  <div class="card results" id="results">
+    <div class="res-grid">
+      <div class="res">
+        <h3>🏷 Kategorie</h3>
+        <div id="classOut"></div>
+      </div>
+      <div class="res">
+        <h3>😊 Stimmung</h3>
+        <div id="sentOut" class="sentiment">–</div>
+        <div id="sentDetail" class="hint"></div>
+      </div>
+    </div>
+    <div class="res" style="margin-top:18px">
+      <h3>🔍 Wichtige Begriffe (Personen, Firmen, Orte)</h3>
+      <div id="entOut"></div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>So funktioniert's:</b> Die KI (Modelle von Hugging Face) wird einmalig in Ihren Browser geladen und rechnet <b>lokal auf Ihrem Gerät</b> – Ihre Texte verlassen den Browser nicht. Entwickelt von <b>Doudouzi &amp; Ergün</b> als Demo für KI-gestützte Prozessoptimierung. ·
+    <a href="../">← zur Website</a>
+  </div>
+
+</div>
+
+<script type="module">
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2';
+env.allowLocalModels = false;
+
+const PRESETS = {
+  logistik: "Reklamation, Anfrage, Bestellung, Angebot, Rechnung, Terminanfrage, Zoll/Transit",
+  gastro: "Reservierung, Beschwerde, Lob, Catering-Anfrage, Bewerbung, Lieferanten-Anfrage",
+  handel: "Reklamation, Bestellung, Rückgabe/Umtausch, Produktfrage, Versandfrage, Beschwerde",
+  recht: "Mandatsanfrage, Fristsache, Rechnung, Terminanfrage, Beschwerde, Allgemeine Frage",
+  dienstleistung: "Auftragsanfrage, Reklamation, Kostenvoranschlag, Terminanfrage, Beschwerde, Lob",
+  gesundheit: "Terminanfrage, Rezeptanfrage, Beschwerde, Allgemeine Frage, Notfall, Rückmeldung",
+  custom: null,
+};
+
+const $ = (id) => document.getElementById(id);
+const preset = $('preset'), cats = $('cats'), runBtn = $('run');
+const statusEl = $('status'), statusText = $('statusText'), barFill = $('barFill');
+const results = $('results');
+
+preset.addEventListener('change', () => {
+  const v = PRESETS[preset.value];
+  if (v) cats.value = v;
+});
+
+let classifier = null, sentiment = null, ner = null;
+
+function setStatus(msg, pct) {
+  statusEl.classList.add('show');
+  statusText.textContent = msg;
+  if (pct != null) barFill.style.width = pct + '%';
+}
+
+async function ensureModels() {
+  if (classifier && sentiment && ner) return;
+  setStatus('Lade KI-Modelle … (einmaliger Download, danach schnell)', 5);
+  const prog = (p) => { if (p.status === 'progress' && p.total) setStatus('Lade Modell: ' + (p.file||''), Math.round(p.loaded/p.total*100)); };
+  if (!classifier) { setStatus('Lade Kategorisierungs-Modell …', 10); classifier = await pipeline('zero-shot-classification', 'Xenova/nli-deberta-v3-xsmall', { progress_callback: prog }); }
+  if (!sentiment)  { setStatus('Lade Stimmungs-Modell …', 40);        sentiment  = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-multilingual-cased-sentiments-student', { progress_callback: prog }); }
+  if (!ner)        { setStatus('Lade Begriffs-Modell …', 70);          ner        = await pipeline('token-classification', 'Xenova/bert-base-multilingual-cased-ner-hrl', { progress_callback: prog }); }
+  setStatus('Modelle bereit – analysiere …', 95);
+}
+
+function renderClass(out) {
+  const el = $('classOut'); el.innerHTML = '';
+  out.labels.forEach((lab, i) => {
+    const pct = Math.round(out.scores[i] * 100);
+    const row = document.createElement('div'); row.className = 'classline';
+    row.innerHTML = `<span class="name">${lab}</span><span class="track"><i style="width:${pct}%"></i></span><span class="pct">${pct}%</span>`;
+    el.appendChild(row);
+  });
+}
+
+function renderSentiment(out) {
+  const r = out[0];
+  const label = (r.label || '').toLowerCase();
+  const map = { positive: ['😊 Positiv', '#16a34a'], negative: ['😟 Negativ', '#dc2626'], neutral: ['😐 Neutral', '#6b7a72'] };
+  const [txt, col] = map[label] || ['😐 ' + r.label, '#6b7a72'];
+  const s = $('sentOut'); s.textContent = txt; s.style.color = col;
+  $('sentDetail').textContent = 'Sicherheit: ' + Math.round((r.score||0)*100) + '%';
+}
+
+function renderEntities(out) {
+  const el = $('entOut');
+  // Merge sub-tokens into whole entities
+  const ents = []; let cur = null;
+  for (const t of out) {
+    const type = (t.entity || '').replace(/^B-|^I-/, '');
+    const word = t.word.replace(/^##/, '');
+    const isCont = t.word.startsWith('##') || (cur && cur.type === type && (t.entity||'').startsWith('I-'));
+    if (isCont && cur) { cur.text += (t.word.startsWith('##') ? '' : ' ') + word; }
+    else { if (cur) ents.push(cur); cur = { type, text: word }; }
+  }
+  if (cur) ents.push(cur);
+  const seen = new Set();
+  const uniq = ents.filter(e => { const k = e.type+':'+e.text.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return e.text.length > 1; });
+  if (!uniq.length) { el.innerHTML = '<span class="hint">Keine Personen/Firmen/Orte erkannt.</span>'; return; }
+  el.innerHTML = uniq.map(e => `<span class="ent ent-${e.type}">${e.text}</span>`).join('');
+}
+
+runBtn.addEventListener('click', async () => {
+  const text = $('text').value.trim();
+  if (!text) { alert('Bitte zuerst einen Text einfügen.'); return; }
+  const labels = cats.value.split(',').map(s => s.trim()).filter(Boolean);
+  if (!labels.length) { alert('Bitte mindestens eine Kategorie angeben.'); return; }
+
+  runBtn.disabled = true; results.classList.remove('show');
+  try {
+    await ensureModels();
+    const [cls, sen, ents] = await Promise.all([
+      classifier(text, labels),
+      sentiment(text),
+      ner(text),
+    ]);
+    renderClass(cls); renderSentiment(sen); renderEntities(ents);
+    results.classList.add('show');
+    setStatus('Fertig ✓', 100);
+    setTimeout(() => statusEl.classList.remove('show'), 1200);
+  } catch (e) {
+    setStatus('Fehler beim Laden/Analysieren: ' + (e.message || e) + ' – bitte Seite neu laden und erneut versuchen.', 0);
+  } finally {
+    runBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
